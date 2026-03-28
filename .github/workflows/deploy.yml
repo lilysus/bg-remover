@@ -25,7 +25,9 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          npm install -g npm@9
+          npm install
 
       - name: Generate Prisma Client
         run: ./node_modules/.bin/prisma generate
