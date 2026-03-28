@@ -3,7 +3,7 @@ export const runtime = 'nodejs';
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { getUserUsage, getOrCreateUser, incrementUserUsage } from "@/lib/db";
 import { removeBackground } from "@/lib/remove-bg";
 
 const FREE_LIMIT = 5;
@@ -11,17 +11,14 @@ const FREE_LIMIT = 5;
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
 
-  if (!session?.user?.id) {
+  if (!session?.user?.email) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const userId = session.user.id;
+  const email = session.user.email;
 
-  // Check usage
-  const user = await prisma.user.findUnique({ where: { id: userId } });
-  if (!user) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
-  }
+  // Get or create user
+  const user = await getOrCreateUser(email, session.user.name, session.user.image);
 
   if (user.usageCount >= FREE_LIMIT) {
     return NextResponse.json(
@@ -49,20 +46,16 @@ export async function POST(req: NextRequest) {
   try {
     resultBuffer = await removeBackground(imageBuffer);
   } catch (err: any) {
-    console.error("Remove.bg error:", err);
     return NextResponse.json({ error: err.message || "Background removal failed" }, { status: 500 });
   }
 
   // Increment usage
-  await prisma.user.update({
-    where: { id: userId },
-    data: { usageCount: { increment: 1 } },
-  });
+  const newCount = await incrementUserUsage(email);
 
   const base64 = resultBuffer.toString("base64");
   return NextResponse.json({
     image: `data:image/png;base64,${base64}`,
-    usageCount: user.usageCount + 1,
-    remaining: FREE_LIMIT - user.usageCount - 1,
+    usageCount: newCount,
+    remaining: Math.max(0, FREE_LIMIT - newCount),
   });
 }
