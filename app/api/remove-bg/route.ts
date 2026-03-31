@@ -1,9 +1,9 @@
-export const runtime = 'nodejs';
+export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { getUserUsage, getOrCreateUser, incrementUserUsage } from "@/lib/db";
+import { getUserUsage, getOrCreateUser, incrementUserUsage, addProcessingRecord } from "@/lib/db";
 import { removeBackground } from "@/lib/remove-bg";
 
 const FREE_LIMIT = 5;
@@ -16,18 +16,18 @@ export async function POST(req: NextRequest) {
   }
 
   const email = session.user.email;
-
-  // Get or create user
   const user = await getOrCreateUser(email, session.user.name, session.user.image);
 
-  if (user.usageCount >= FREE_LIMIT) {
+  const isProActive =
+    user.isPro && (!user.proExpiresAt || new Date(user.proExpiresAt) > new Date());
+
+  if (!isProActive && user.usageCount >= FREE_LIMIT) {
     return NextResponse.json(
-      { error: "Free limit reached. Please upgrade to continue.", code: "LIMIT_REACHED" },
+      { error: "Free limit reached. Please upgrade to Pro.", code: "LIMIT_REACHED" },
       { status: 402 }
     );
   }
 
-  // Parse image from multipart form
   let imageBuffer: Buffer;
   try {
     const formData = await req.formData();
@@ -41,21 +41,27 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to read image" }, { status: 400 });
   }
 
-  // Call Remove.bg
   let resultBuffer: Buffer;
   try {
     resultBuffer = await removeBackground(imageBuffer);
   } catch (err: any) {
-    return NextResponse.json({ error: err.message || "Background removal failed" }, { status: 500 });
+    return NextResponse.json(
+      { error: err.message || "Background removal failed" },
+      { status: 500 }
+    );
   }
 
-  // Increment usage
+  // Increment usage counter (Pro users tracked too, for analytics)
   const newCount = await incrementUserUsage(email);
+
+  // Record processing history
+  await addProcessingRecord(user.id);
 
   const base64 = resultBuffer.toString("base64");
   return NextResponse.json({
     image: `data:image/png;base64,${base64}`,
     usageCount: newCount,
-    remaining: Math.max(0, FREE_LIMIT - newCount),
+    remaining: isProActive ? null : Math.max(0, FREE_LIMIT - newCount),
+    isPro: isProActive,
   });
 }

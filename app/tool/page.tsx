@@ -1,12 +1,13 @@
 "use client";
 
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import ImageUploader from "@/components/ImageUploader";
 import BeforeAfterSlider from "@/components/BeforeAfterSlider";
 import UsageBadge from "@/components/UsageBadge";
 import UpgradePrompt from "@/components/UpgradePrompt";
+import UserDropdown from "@/components/UserDropdown";
 
 export default function ToolPage() {
   const { data: session, status } = useSession();
@@ -107,21 +108,11 @@ export default function ToolPage() {
           </a>
           <div className="flex items-center gap-4">
             {remaining !== null && <UsageBadge remaining={remaining} />}
-            <div className="flex items-center gap-3">
-              {session.user?.image && (
-                <img
-                  src={session.user.image}
-                  alt="avatar"
-                  className="w-8 h-8 rounded-full"
-                />
-              )}
-              <button
-                onClick={() => signOut({ callbackUrl: "/" })}
-                className="text-gray-400 hover:text-white text-sm transition-colors"
-              >
-                Sign out
-              </button>
-            </div>
+            <UserDropdown
+              name={session.user?.name}
+              email={session.user?.email}
+              image={session.user?.image}
+            />
           </div>
         </div>
       </nav>
