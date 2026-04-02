@@ -255,7 +255,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Upgrade CTA — only for free/basic users */}
-        {!isSubscribed && (
+        {plan === "free" && (
           <div id="upgrade" className="bg-gradient-to-br from-violet-900/40 to-pink-900/40 border border-violet-500/30 rounded-2xl p-8">
             <div className="text-center mb-8">
               <div className="text-4xl mb-3">🚀</div>
@@ -316,7 +316,7 @@ export default function ProfilePage() {
             </ul>
           </div>
         )}
-        {isSubscribed && plan === "basic" && (
+        {plan === "basic" && (
           <div id="upgrade" className="bg-gradient-to-br from-violet-900/40 to-pink-900/40 border border-violet-500/30 rounded-2xl p-8">
             <div className="text-center mb-6">
               <div className="text-4xl mb-3">⚡</div>
