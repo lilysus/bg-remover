@@ -250,26 +250,26 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Upgrade CTA — only for free users */}
+        {/* Upgrade CTA — only for free/basic users */}
         {!isProActive && (
           <div className="bg-gradient-to-br from-violet-900/40 to-pink-900/40 border border-violet-500/30 rounded-2xl p-8">
             <div className="text-center mb-8">
               <div className="text-4xl mb-3">🚀</div>
-              <h2 className="text-2xl font-bold mb-2">Upgrade to Pro</h2>
+              <h2 className="text-2xl font-bold mb-2">Upgrade Your Plan</h2>
               <p className="text-gray-400">
-                Unlimited background removals. No limits, no waiting.
+                More removals every month. Cancel anytime.
               </p>
             </div>
 
             {/* Pricing Cards */}
             <div className="grid md:grid-cols-2 gap-4 max-w-2xl mx-auto mb-6">
-              {/* Monthly */}
+              {/* Basic */}
               <div className="bg-gray-900/60 border border-gray-700 rounded-xl p-5">
-                <div className="text-gray-400 text-sm font-medium mb-1">Monthly</div>
+                <div className="text-gray-400 text-sm font-medium mb-1">Basic</div>
                 <div className="text-3xl font-bold mb-1">
-                  $9<span className="text-gray-500 text-lg font-normal">/mo</span>
+                  $2.99<span className="text-gray-500 text-lg font-normal">/mo</span>
                 </div>
-                <div className="text-gray-500 text-xs mb-4">Billed monthly · Cancel anytime</div>
+                <div className="text-gray-500 text-xs mb-4">200 removals/month · Cancel anytime</div>
                 <button
                   disabled
                   className="w-full border border-violet-500/50 text-violet-400 py-2 rounded-lg text-sm font-medium opacity-60 cursor-not-allowed"
@@ -278,18 +278,18 @@ export default function ProfilePage() {
                 </button>
               </div>
 
-              {/* Yearly — highlighted */}
+              {/* Pro — highlighted */}
               <div className="bg-gradient-to-b from-violet-900/50 to-pink-900/30 border border-violet-500/50 rounded-xl p-5 relative">
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                   <span className="bg-gradient-to-r from-violet-500 to-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                    BEST VALUE · SAVE 45%
+                    BEST VALUE
                   </span>
                 </div>
-                <div className="text-gray-300 text-sm font-medium mb-1 mt-2">Yearly</div>
+                <div className="text-violet-300 text-sm font-medium mb-1 mt-2">Pro</div>
                 <div className="text-3xl font-bold mb-0.5">
-                  $59<span className="text-gray-400 text-lg font-normal">/yr</span>
+                  $6.99<span className="text-gray-400 text-lg font-normal">/mo</span>
                 </div>
-                <div className="text-violet-400 text-xs mb-4">~$4.9/month · Save $49</div>
+                <div className="text-violet-400 text-xs mb-4">600 removals/month · Cancel anytime</div>
                 <button
                   disabled
                   className="w-full bg-gradient-to-r from-violet-600 to-pink-600 text-white py-2 rounded-lg text-sm font-semibold opacity-60 cursor-not-allowed"
@@ -302,9 +302,8 @@ export default function ProfilePage() {
             {/* Feature list */}
             <ul className="max-w-xs mx-auto space-y-2 text-sm text-gray-400">
               {[
-                "✅ Unlimited background removals",
+                "✅ More removals every month",
                 "✅ Highest quality output",
-                "✅ No daily or monthly caps",
                 "✅ Priority processing",
                 "✅ Cancel anytime",
               ].map((f) => (
