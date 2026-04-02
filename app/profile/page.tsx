@@ -11,11 +11,12 @@ interface UserProfile {
   email: string;
   image: string;
   usageCount: number;
-  remaining: number | null;
-  limit: number;
-  isPro: boolean;
-  isProActive: boolean;
-  proExpiresAt: string | null;
+  monthlyUsage: number;
+  monthlyLimit: number;
+  remaining: number;
+  plan: string;
+  planExpiresAt: string | null;
+  isSubscribed: boolean;
   createdAt: string;
 }
 
@@ -88,9 +89,12 @@ export default function ProfilePage() {
 
   if (!session || !profile) return null;
 
-  const isProActive = profile.isProActive;
-  const usedCount = profile.usageCount;
-  const FREE_LIMIT = profile.limit;
+  const plan = profile.plan ?? "free";
+  const isSubscribed = profile.isSubscribed;
+  const monthlyUsage = profile.monthlyUsage ?? 0;
+  const monthlyLimit = profile.monthlyLimit ?? 5;
+  const remaining = profile.remaining ?? 0;
+  const usedCount = profile.usageCount; // lifetime total for Account card
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
@@ -135,9 +139,13 @@ export default function ProfilePage() {
           <div className="flex-1">
             <div className="flex items-center gap-3 flex-wrap">
               <h1 className="text-xl font-bold">{profile.name}</h1>
-              {isProActive ? (
+              {plan === "pro" ? (
                 <span className="text-xs font-semibold bg-gradient-to-r from-violet-500 to-pink-500 text-white px-2.5 py-0.5 rounded-full">
                   PRO
+                </span>
+              ) : plan === "basic" ? (
+                <span className="text-xs font-semibold bg-blue-500 text-white px-2.5 py-0.5 rounded-full">
+                  BASIC
                 </span>
               ) : (
                 <span className="text-xs font-medium bg-gray-800 text-gray-400 px-2.5 py-0.5 rounded-full border border-gray-700">
@@ -156,33 +164,23 @@ export default function ProfilePage() {
           {/* Usage Stats */}
           <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
             <h2 className="font-semibold mb-4 flex items-center gap-2">
-              <span className="text-lg">📊</span> Usage
+              <span className="text-lg">📊</span> This Month
             </h2>
-            {isProActive ? (
-              <div className="space-y-2">
-                <div className="text-3xl font-bold text-violet-400">
-                  {usedCount}
-                  <span className="text-gray-500 text-lg font-normal"> processed</span>
+            <div className="space-y-3">
+              <div className="flex justify-between items-end">
+                <div>
+                  <span className="text-3xl font-bold text-violet-400">{monthlyUsage}</span>
+                  <span className="text-gray-500 text-lg font-normal"> / {monthlyLimit}</span>
                 </div>
-                <p className="text-gray-400 text-sm">Unlimited with Pro ✨</p>
-                {profile.proExpiresAt && (
-                  <p className="text-gray-600 text-xs">
-                    Pro renews {formatDate(profile.proExpiresAt)}
-                  </p>
-                )}
+                <span className="text-sm text-gray-400">{remaining} left</span>
               </div>
-            ) : (
-              <div className="space-y-3">
-                <div className="flex justify-between text-sm text-gray-400">
-                  <span>{usedCount} used</span>
-                  <span>{Math.max(0, FREE_LIMIT - usedCount)} remaining</span>
-                </div>
-                <UsageBar used={usedCount} limit={FREE_LIMIT} />
-                <p className="text-gray-600 text-xs">
-                  {FREE_LIMIT} free removals total · lifetime
-                </p>
-              </div>
-            )}
+              <UsageBar used={monthlyUsage} limit={monthlyLimit} />
+              <p className="text-gray-600 text-xs">
+                {plan === "free"
+                  ? "5 free removals · resets never (one-time)"
+                  : `Resets monthly · ${plan === "pro" ? "Pro" : "Basic"} plan`}
+              </p>
+            </div>
           </div>
 
           {/* Account Info */}
@@ -209,10 +207,16 @@ export default function ProfilePage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Plan</span>
-                <span className={isProActive ? "text-violet-400 font-medium" : "text-gray-300"}>
-                  {isProActive ? "Pro" : "Free"}
+                <span className={plan === "pro" ? "text-violet-400 font-medium" : plan === "basic" ? "text-blue-400 font-medium" : "text-gray-300"}>
+                  {plan === "pro" ? "Pro" : plan === "basic" ? "Basic" : "Free"}
                 </span>
               </div>
+              {profile.planExpiresAt && (
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Renews</span>
+                  <span className="text-gray-300">{formatDate(profile.planExpiresAt)}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -251,8 +255,8 @@ export default function ProfilePage() {
         </div>
 
         {/* Upgrade CTA — only for free/basic users */}
-        {!isProActive && (
-          <div className="bg-gradient-to-br from-violet-900/40 to-pink-900/40 border border-violet-500/30 rounded-2xl p-8">
+        {!isSubscribed && (
+          <div id="upgrade" className="bg-gradient-to-br from-violet-900/40 to-pink-900/40 border border-violet-500/30 rounded-2xl p-8">
             <div className="text-center mb-8">
               <div className="text-4xl mb-3">🚀</div>
               <h2 className="text-2xl font-bold mb-2">Upgrade Your Plan</h2>
@@ -264,22 +268,22 @@ export default function ProfilePage() {
             {/* Pricing Cards */}
             <div className="grid md:grid-cols-2 gap-4 max-w-2xl mx-auto mb-6">
               {/* Basic */}
-              <div className="bg-gray-900/60 border border-gray-700 rounded-xl p-5">
+              <div className="bg-gray-900/60 border border-gray-700 rounded-xl p-5 flex flex-col">
                 <div className="text-gray-400 text-sm font-medium mb-1">Basic</div>
                 <div className="text-3xl font-bold mb-1">
                   $2.99<span className="text-gray-500 text-lg font-normal">/mo</span>
                 </div>
-                <div className="text-gray-500 text-xs mb-4">200 removals/month · Cancel anytime</div>
-                <button
-                  disabled
-                  className="w-full border border-violet-500/50 text-violet-400 py-2 rounded-lg text-sm font-medium opacity-60 cursor-not-allowed"
-                >
-                  Coming Soon
-                </button>
+                <div className="text-gray-500 text-xs mb-5">200 removals/month · Cancel anytime</div>
+                <div className="mt-auto">
+                  <div className="w-full flex items-center justify-center gap-2 border border-dashed border-gray-600 text-gray-500 py-2 rounded-lg text-sm">
+                    <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />
+                    Payment coming soon
+                  </div>
+                </div>
               </div>
 
               {/* Pro — highlighted */}
-              <div className="bg-gradient-to-b from-violet-900/50 to-pink-900/30 border border-violet-500/50 rounded-xl p-5 relative">
+              <div className="bg-gradient-to-b from-violet-900/50 to-pink-900/30 border border-violet-500/50 rounded-xl p-5 relative flex flex-col">
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                   <span className="bg-gradient-to-r from-violet-500 to-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full">
                     BEST VALUE
@@ -289,13 +293,13 @@ export default function ProfilePage() {
                 <div className="text-3xl font-bold mb-0.5">
                   $6.99<span className="text-gray-400 text-lg font-normal">/mo</span>
                 </div>
-                <div className="text-violet-400 text-xs mb-4">600 removals/month · Cancel anytime</div>
-                <button
-                  disabled
-                  className="w-full bg-gradient-to-r from-violet-600 to-pink-600 text-white py-2 rounded-lg text-sm font-semibold opacity-60 cursor-not-allowed"
-                >
-                  Coming Soon
-                </button>
+                <div className="text-violet-400 text-xs mb-5">600 removals/month · Cancel anytime</div>
+                <div className="mt-auto">
+                  <div className="w-full flex items-center justify-center gap-2 border border-dashed border-violet-500/40 text-violet-400/70 py-2 rounded-lg text-sm">
+                    <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+                    Payment coming soon
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -310,6 +314,28 @@ export default function ProfilePage() {
                 <li key={f}>{f}</li>
               ))}
             </ul>
+          </div>
+        )}
+        {isSubscribed && plan === "basic" && (
+          <div id="upgrade" className="bg-gradient-to-br from-violet-900/40 to-pink-900/40 border border-violet-500/30 rounded-2xl p-8">
+            <div className="text-center mb-6">
+              <div className="text-4xl mb-3">⚡</div>
+              <h2 className="text-xl font-bold mb-2">Upgrade to Pro</h2>
+              <p className="text-gray-400 text-sm">Get 600 removals/month for just $6.99.</p>
+            </div>
+            <div className="max-w-xs mx-auto">
+              <div className="bg-gradient-to-b from-violet-900/50 to-pink-900/30 border border-violet-500/50 rounded-xl p-5">
+                <div className="text-violet-300 text-sm font-medium mb-1">Pro</div>
+                <div className="text-3xl font-bold mb-0.5">
+                  $6.99<span className="text-gray-400 text-lg font-normal">/mo</span>
+                </div>
+                <div className="text-violet-400 text-xs mb-4">600 removals/month</div>
+                <div className="w-full flex items-center justify-center gap-2 border border-dashed border-violet-500/40 text-violet-400/70 py-2 rounded-lg text-sm">
+                  <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+                  Payment coming soon
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </main>

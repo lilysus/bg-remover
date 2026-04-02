@@ -39,9 +39,10 @@ export default function UpgradePrompt({ currentPlan = "free" }: Props) {
               <div className="text-gray-500 text-xs mb-3">200 removals/month</div>
               <button
                 disabled
-                className="w-full border border-violet-500/50 text-violet-400 py-1.5 rounded-lg text-xs font-medium opacity-60 cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-2 border border-dashed border-gray-600 text-gray-500 py-1.5 rounded-lg text-xs cursor-default"
               >
-                Coming Soon
+                <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />
+                Payment coming soon
               </button>
             </div>
           )}
@@ -55,9 +56,10 @@ export default function UpgradePrompt({ currentPlan = "free" }: Props) {
             <div className="text-violet-400 text-xs mb-3">600 removals/month</div>
             <button
               disabled
-              className="w-full bg-gradient-to-r from-violet-600 to-pink-600 text-white py-1.5 rounded-lg text-xs font-semibold opacity-60 cursor-not-allowed"
+              className="w-full flex items-center justify-center gap-2 border border-dashed border-violet-500/40 text-violet-400/70 py-1.5 rounded-lg text-xs cursor-default"
             >
-              Coming Soon
+              <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+              Payment coming soon
             </button>
           </div>
         </div>
